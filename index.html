@@ -193,12 +193,17 @@
       opacity:.95;
     }
     .card .icon{
-      position:absolute;
-      left:50%; top:44%;
-      transform:translate(-50%,-50%);
-      font-size:44px;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
-    }
+  position:absolute;
+  left:50%; top:44%;
+  transform:translate(-50%,-50%);
+  width:82px;
+  height:82px;
+  object-fit:contain;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
+  user-select:none;
+  pointer-events:none;
+}
+
 
     .name{
       font-weight:900;
@@ -340,13 +345,14 @@
 
   // ПУЛЛ ПРЕДМЕТОВ (как в кейсе)
   const items = [
-    { id:"c1", icon:"🟦", name:"Blue Bite",  rarity:"rare",   price:35,  w:22 },
-    { id:"c2", icon:"🟩", name:"Green Pulse",rarity:"common", price:12,  w:40 },
-    { id:"c3", icon:"🟪", name:"Violet Edge",rarity:"epic",   price:120, w:12 },
-    { id:"c4", icon:"🟨", name:"Gold Rush",  rarity:"legend", price:340, w:6  },
-    { id:"c5", icon:"💎", name:"Crystal",    rarity:"myth",   price:900, w:2  },
-    { id:"c6", icon:"💀", name:"Death Mark", rarity:"death",  price:0,   w:3  },
-  ];
+  { id:"c1", img:"img/images.png", name:"Blue Bite",   rarity:"rare",   price:35,  w:22 },
+  { id:"c2", img:"img/images.png", name:"Green Pulse", rarity:"common", price:12,  w:40 },
+  { id:"c3", img:"img/images.png", name:"Violet Edge", rarity:"epic",   price:120, w:12 },
+  { id:"c4", img:"img/images.png", name:"Gold Rush",   rarity:"legend", price:340, w:6  },
+  { id:"c5", img:"img/images.png", name:"Crystal",     rarity:"myth",   price:900, w:2  },
+  { id:"c6", img:"img/images.png", name:"Death Mark",  rarity:"death",  price:0,   w:3  },
+];
+
 
   const rarityName = {
     common:"Обычный",
@@ -387,20 +393,26 @@
   }
 
   function makeCard(it){
-    const el = document.createElement("div");
-    el.className = "card";
-    el.dataset.id = it.id;
-    el.innerHTML = `
-      <div class="rarityBar ${rarityClass[it.rarity]}"></div>
-      <div class="icon">${it.icon}</div>
-      <div class="name">${it.name}</div>
-      <div class="meta">
-        <div>${rarityName[it.rarity]}</div>
-        <div>${it.price}G</div>
-      </div>
-    `;
-    return el;
-  }
+  const el = document.createElement("div");
+  el.className = "card";
+  el.dataset.id = it.id;
+
+  const iconHtml = it.img
+    ? `<img class="icon" src="${it.img}" alt="${it.name}" loading="lazy" draggable="false">`
+    : `<div class="icon">${it.icon ?? "?"}</div>`;
+
+  el.innerHTML = `
+    <div class="rarityBar ${rarityClass[it.rarity]}"></div>
+    ${iconHtml}
+    <div class="name">${it.name}</div>
+    <div class="meta">
+      <div>${rarityName[it.rarity]}</div>
+      <div>${it.price}G</div>
+    </div>
+  `;
+  return el;
+}
+
 
   function buildStrip(count=60){
     track.innerHTML = "";
