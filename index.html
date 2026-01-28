@@ -1,76 +1,523 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Roulette</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Case Open</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      background: #0f0f0f;
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      margin: 0;
-      padding: 40px;
+    :root{
+      --bg:#07090f;
+      --panel:#0b1020cc;
+      --stroke:#1b2a55;
+      --text:#eaf0ff;
+      --muted:#9fb0d6;
+      --accent:#18ff9a;
+
+      --common:#6b7a99;
+      --rare:#3da5ff;
+      --epic:#b84dff;
+      --legend:#ffb23d;
+      --myth:#ff4d6d;
+      --death:#f3f5ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 50% 10%, #122052 0%, transparent 60%),
+        radial-gradient(700px 500px at 20% 70%, #1b3a2b 0%, transparent 60%),
+        radial-gradient(800px 600px at 85% 85%, #3a1733 0%, transparent 60%),
+        var(--bg);
+      overflow:hidden;
     }
 
-    .line {
-      font-size: 32px;
-      margin: 30px 0;
-      transition: transform 0.2s;
+    .wrap{
+      width:min(980px, 94vw);
+      margin:0 auto;
+      padding:22px 0 26px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:14px;
     }
 
-    button {
-      padding: 15px 40px;
-      font-size: 18px;
-      background: #00ff88;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
+    .top{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border:1px solid rgba(88,120,210,.25);
+      background:linear-gradient(180deg, rgba(18,26,50,.7), rgba(8,10,18,.35));
+      border-radius:16px;
+      box-shadow: 0 10px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      background: radial-gradient(circle at 30% 30%, #2cffb3, #0ea86a 55%, #0a2a1f 100%);
+      box-shadow: 0 0 24px rgba(24,255,154,.35);
+    }
+    .title{
+      font-weight:800; letter-spacing:.2px;
+      display:flex; flex-direction:column;
+      line-height:1.05;
+    }
+    .title small{color:var(--muted); font-weight:600; margin-top:2px}
+    .balance{
+      text-align:right;
+      display:flex; flex-direction:column; gap:2px;
+      font-weight:700;
+    }
+    .balance small{color:var(--muted); font-weight:600}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border:1px solid rgba(24,255,154,.25);
+      background: rgba(24,255,154,.08);
+      border-radius:999px;
+      box-shadow: 0 0 18px rgba(24,255,154,.12);
+      justify-content:center;
+      min-width:120px;
+    }
+
+    /* CASE PANEL */
+    .panel{
+      width:100%;
+      border-radius:18px;
+      border:1px solid rgba(88,120,210,.22);
+      background: linear-gradient(180deg, rgba(14,18,32,.75), rgba(6,8,14,.35));
+      box-shadow: 0 20px 70px rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      padding:16px;
+      position:relative;
+    }
+
+    .caseHeader{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; margin-bottom:12px;
+    }
+    .caseName{
+      font-weight:900; font-size:18px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .tag{
+      font-size:12px; color:var(--muted); font-weight:700;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(88,120,210,.22);
+      background: rgba(18,26,50,.35);
+    }
+
+    /* ROULETTE */
+    .roulette{
+      position:relative;
+      height:170px;
+      border-radius:16px;
+      border:1px solid rgba(88,120,210,.18);
+      overflow:hidden;
+      background:
+        linear-gradient(180deg, rgba(10,14,26,.9), rgba(5,6,10,.75));
+    }
+
+    .fadeL, .fadeR{
+      position:absolute; top:0; bottom:0; width:90px; z-index:4;
+      pointer-events:none;
+    }
+    .fadeL{left:0; background: linear-gradient(90deg, rgba(7,9,15,1), rgba(7,9,15,0));}
+    .fadeR{right:0; background: linear-gradient(270deg, rgba(7,9,15,1), rgba(7,9,15,0));}
+
+    .centerMark{
+      position:absolute; top:0; bottom:0; left:50%;
+      width:0; transform:translateX(-50%);
+      z-index:5;
+    }
+    .centerMark:before{
+      content:"";
+      position:absolute; top:12px; bottom:12px; left:-1px;
+      width:2px;
+      background: linear-gradient(180deg, transparent, rgba(24,255,154,.9), transparent);
+      box-shadow: 0 0 18px rgba(24,255,154,.55);
+      border-radius:2px;
+    }
+    .centerMark:after{
+      content:"";
+      position:absolute; top:6px; left:-8px;
+      width:16px; height:16px; border-radius:999px;
+      background: rgba(24,255,154,.9);
+      box-shadow: 0 0 22px rgba(24,255,154,.6);
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      transform: rotate(180deg);
+      opacity:.9;
+    }
+
+    .track{
+      height:100%;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:0 120px; /* чтобы центр был "внутри" */
+      will-change: transform;
+      transform: translate3d(0,0,0);
+    }
+
+    .card{
+      width:128px;
+      height:128px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.08), rgba(0,0,0,.0) 55%),
+                  rgba(10,14,26,.72);
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      padding:10px 10px 9px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.45);
+      overflow:hidden;
+      flex: 0 0 auto;
+    }
+
+    .card .rarityBar{
+      position:absolute; left:0; right:0; top:0;
+      height:4px;
+      opacity:.95;
+    }
+    .card .icon{
+      position:absolute;
+      left:50%; top:44%;
+      transform:translate(-50%,-50%);
+      font-size:44px;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
+    }
+
+    .name{
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.2px;
+      line-height:1.1;
+    }
+    .meta{
+      margin-top:2px;
+      font-size:11px;
+      color:var(--muted);
+      font-weight:700;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .glow{
+      position:absolute; inset:-40px;
+      background: radial-gradient(circle at 50% 50%, rgba(24,255,154,.18), transparent 60%);
+      opacity:0;
+      transition: opacity .25s ease;
+      pointer-events:none;
+      z-index:1;
+    }
+    .roulette.spinning .glow{opacity:1;}
+
+    /* RESULT */
+    .result{
+      margin-top:14px;
+      display:none;
+      border-radius:16px;
+      border:1px solid rgba(24,255,154,.22);
+      background: rgba(24,255,154,.06);
+      padding:14px 14px;
+      box-shadow: 0 0 26px rgba(24,255,154,.16);
+    }
+    .resultRow{
+      display:flex; align-items:center; gap:10px;
+      font-weight:900;
+    }
+    .resultRow span{font-size:22px}
+
+    /* BUTTONS */
+    .actions{
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+    button{
+      appearance:none;
+      border:none;
+      cursor:pointer;
+      font-weight:900;
+      letter-spacing:.2px;
+      border-radius:14px;
+      padding:12px 16px;
+      color:#04120b;
+      background: linear-gradient(180deg, #2cffb3, #10c77d);
+      box-shadow: 0 14px 35px rgba(24,255,154,.22);
+      transition: transform .08s ease, filter .2s ease, opacity .2s ease;
+      min-width:170px;
+    }
+    button:active{transform: translateY(1px) scale(.99)}
+    button.secondary{
+      color:var(--text);
+      background: rgba(18,26,50,.35);
+      border:1px solid rgba(88,120,210,.22);
+      box-shadow:none;
+      min-width:140px;
+    }
+    button:disabled{opacity:.55; cursor:not-allowed; filter:saturate(.6);}
+
+    /* rarity colors helpers */
+    .r-common{background: linear-gradient(90deg, transparent, rgba(107,122,153,.9), transparent);}
+    .r-rare{background: linear-gradient(90deg, transparent, rgba(61,165,255,.95), transparent);}
+    .r-epic{background: linear-gradient(90deg, transparent, rgba(184,77,255,.95), transparent);}
+    .r-legend{background: linear-gradient(90deg, transparent, rgba(255,178,61,.95), transparent);}
+    .r-myth{background: linear-gradient(90deg, transparent, rgba(255,77,109,.95), transparent);}
+    .r-death{background: linear-gradient(90deg, transparent, rgba(243,245,255,.95), transparent);}
+
+    @media (max-width:520px){
+      .roulette{height:160px}
+      .card{width:118px;height:118px}
+      button{width:100%}
+      .actions{flex-direction:column}
     }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="title">
+          <div>So2 xRullet</div>
+          <small>Mini App • Case Open</small>
+        </div>
+      </div>
+      <div class="balance">
+        <small>Баланс</small>
+        <div class="pill">💰 <span id="bal">1000</span> G</div>
+      </div>
+    </div>
 
-<h2>🎰 Рулетка</h2>
+    <div class="panel">
+      <div class="caseHeader">
+        <div class="caseName">🎁 Кейc: Neon Drop <span class="tag">demo</span></div>
+        <div class="tag">Шанс + редкость + glow</div>
+      </div>
 
-<div id="roulette" class="line">
-  🟥 🟩 🟦 🟨 🟥
-</div>
+      <div id="roulette" class="roulette">
+        <div class="glow"></div>
+        <div class="fadeL"></div>
+        <div class="fadeR"></div>
+        <div class="centerMark"></div>
+        <div id="track" class="track"></div>
+      </div>
 
-<button onclick="spin()">Крутить</button>
+      <div class="actions">
+        <button id="spinBtn">🎰 Открыть кейс</button>
+        <button id="againBtn" class="secondary" disabled>🔁 Ещё раз</button>
+      </div>
+
+      <div id="result" class="result">
+        <div class="resultRow">🎯 Выпало: <span id="resIcon">🟩</span> <span id="resName">—</span></div>
+        <div class="meta" style="margin-top:6px">
+          <div>Редкость: <span id="resRarity" style="font-weight:900">—</span></div>
+          <div>Цена: <span id="resPrice" style="font-weight:900">—</span> G</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-const tg = window.Telegram.WebApp;
-tg.expand();
+  const tg = window.Telegram?.WebApp;
+  if (tg) tg.expand();
 
-const items = ["🟥","🟩","🟦","🟨","💀","⚡️"];
+  // ПУЛЛ ПРЕДМЕТОВ (как в кейсе)
+  const items = [
+    { id:"c1", icon:"🟦", name:"Blue Bite",  rarity:"rare",   price:35,  w:22 },
+    { id:"c2", icon:"🟩", name:"Green Pulse",rarity:"common", price:12,  w:40 },
+    { id:"c3", icon:"🟪", name:"Violet Edge",rarity:"epic",   price:120, w:12 },
+    { id:"c4", icon:"🟨", name:"Gold Rush",  rarity:"legend", price:340, w:6  },
+    { id:"c5", icon:"💎", name:"Crystal",    rarity:"myth",   price:900, w:2  },
+    { id:"c6", icon:"💀", name:"Death Mark", rarity:"death",  price:0,   w:3  },
+  ];
 
-let spinning = false;
+  const rarityName = {
+    common:"Обычный",
+    rare:"Редкий",
+    epic:"Эпик",
+    legend:"Легенда",
+    myth:"Мифик",
+    death:"Смерть",
+  };
 
-function spin() {
-  if (spinning) return;
-  spinning = true;
+  const rarityClass = {
+    common:"r-common",
+    rare:"r-rare",
+    epic:"r-epic",
+    legend:"r-legend",
+    myth:"r-myth",
+    death:"r-death",
+  };
 
-  let count = 0;
-  let interval = setInterval(() => {
-    let line = [];
-    for (let i = 0; i < 5; i++) {
-      line.push(items[Math.floor(Math.random()*items.length)]);
+  const track = document.getElementById("track");
+  const roulette = document.getElementById("roulette");
+  const spinBtn = document.getElementById("spinBtn");
+  const againBtn = document.getElementById("againBtn");
+  const resultBox = document.getElementById("result");
+
+  let spinning = false;
+  let sent = false;
+
+  // строим ленту (много карточек)
+  function pickWeighted(){
+    const sum = items.reduce((a,x)=>a+x.w,0);
+    let r = Math.random()*sum;
+    for (const it of items){
+      r -= it.w;
+      if (r <= 0) return it;
     }
-    document.getElementById("roulette").innerText = line.join(" ");
-    count++;
+    return items[0];
+  }
 
-    if (count > 20) {
-      clearInterval(interval);
+  function makeCard(it){
+    const el = document.createElement("div");
+    el.className = "card";
+    el.dataset.id = it.id;
+    el.innerHTML = `
+      <div class="rarityBar ${rarityClass[it.rarity]}"></div>
+      <div class="icon">${it.icon}</div>
+      <div class="name">${it.name}</div>
+      <div class="meta">
+        <div>${rarityName[it.rarity]}</div>
+        <div>${it.price}G</div>
+      </div>
+    `;
+    return el;
+  }
+
+  function buildStrip(count=60){
+    track.innerHTML = "";
+    for (let i=0;i<count;i++){
+      const it = pickWeighted();
+      track.appendChild(makeCard(it));
+    }
+    // reset transform
+    track.style.transition = "none";
+    track.style.transform = "translate3d(0,0,0)";
+    // force reflow
+    track.offsetHeight;
+  }
+
+  buildStrip();
+
+  function getCenterCard(){
+    // центр относительно видимой области рулетки
+    const rRect = roulette.getBoundingClientRect();
+    const cx = rRect.left + rRect.width/2;
+    const cards = [...track.children];
+    let best = null;
+    let bestDist = 1e9;
+    for (const c of cards){
+      const cr = c.getBoundingClientRect();
+      const ccx = cr.left + cr.width/2;
+      const d = Math.abs(ccx - cx);
+      if (d < bestDist){ bestDist = d; best = c; }
+    }
+    return best;
+  }
+
+  function showResult(it){
+    document.getElementById("resIcon").textContent = it.icon;
+    document.getElementById("resName").textContent = it.name;
+    document.getElementById("resRarity").textContent = rarityName[it.rarity];
+    document.getElementById("resPrice").textContent = it.price;
+    resultBox.style.display = "block";
+  }
+
+  function spin(){
+    if (spinning) return;
+    spinning = true;
+    sent = false;
+    spinBtn.disabled = true;
+    againBtn.disabled = true;
+    resultBox.style.display = "none";
+    roulette.classList.add("spinning");
+
+    // заново набиваем ленту (чтобы было "как кейс" каждый раз)
+    buildStrip(70);
+
+    // выбираем заранее “цель” (можно позже заменить на сервер/бота)
+    const target = pickWeighted();
+
+    // подменим одну карточку ближе к концу на target, чтобы реально “выпало”
+    const cards = [...track.children];
+    const stopIndex = Math.floor(cards.length * 0.78); // ближе к правому краю
+    cards[stopIndex].replaceWith(makeCard(target));
+
+    // посчитаем куда прокрутить, чтобы эта карточка оказалась по центру
+    const newCards = [...track.children];
+    const targetEl = newCards[stopIndex];
+    const rRect = roulette.getBoundingClientRect();
+    const centerX = rRect.width/2;
+
+    const tRect = targetEl.getBoundingClientRect();
+    const trackRect = track.getBoundingClientRect();
+
+    // текущая позиция target относительно track в "нулевой" позиции:
+    // используем offsetLeft (надёжнее, чем getBoundingClientRect до анимации)
+    const targetCenter = targetEl.offsetLeft + targetEl.offsetWidth/2;
+
+    // нам надо, чтобы targetCenter - translateX == centerX - paddingLeft
+    // у track padding слева 120px
+    const paddingLeft = 120;
+    const translateX = -(targetCenter - (centerX - paddingLeft));
+
+    // добавим чуть "перелёта" и вернёмся (как кейсы)
+    const overshoot = translateX - 90;
+
+    // анимация: быстрый старт -> замедление
+    track.style.transition = "transform 3.2s cubic-bezier(.08,.92,.05,1)";
+    track.style.transform = `translate3d(${overshoot}px,0,0)`;
+
+    // после основной анимации — небольшой откат (bounce)
+    setTimeout(() => {
+      track.style.transition = "transform .55s cubic-bezier(.2,1.2,.2,1)";
+      track.style.transform = `translate3d(${translateX}px,0,0)`;
+    }, 3200);
+
+    // финиш
+    setTimeout(() => {
+      roulette.classList.remove("spinning");
       spinning = false;
+      againBtn.disabled = false;
 
-      const result = line[2]; // центр
-      tg.sendData(result); // отправляем боту
-    }
-  }, 120);
-}
+      const centerCard = getCenterCard();
+      // Если вдруг центр не target (редко), берём target как источник истины
+      showResult(target);
+
+      // отправка в бота 1 раз и закрыть WebApp
+      if (tg && !sent){
+        sent = true;
+        tg.sendData(JSON.stringify({ id: target.id, name: target.name, rarity: target.rarity, price: target.price }));
+        tg.close();
+      } else {
+        spinBtn.disabled = false;
+      }
+    }, 3900);
+  }
+
+  spinBtn.addEventListener("click", spin);
+  againBtn.addEventListener("click", () => {
+    spinBtn.disabled = false;
+    spin();
+  });
 </script>
-
 </body>
 </html>
